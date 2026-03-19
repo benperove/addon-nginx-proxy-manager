@@ -10,7 +10,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base
 ARG NGINX_PROXY_MANAGER_VERSION="v2.14.0"
-# hadolint ignore=DL3003,DL3042
+# hadolint ignore=DL3003,DL3018,DL3042
 RUN \
     apk update \
     && apk add --no-cache --upgrade libcrypto3 libssl3 \
