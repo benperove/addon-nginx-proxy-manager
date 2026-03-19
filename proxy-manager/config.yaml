@@ -2,6 +2,7 @@
 name: Nginx Proxy Manager (Fork)
 version: dev
 slug: nginxproxymanager-fork
+image: ghcr.io/benperove/nginxproxymanager-fork/{arch}
 description: Manage Nginx proxy hosts with a simple, powerful interface (custom fork)
 url: https://github.com/benperove/addon-nginx-proxy-manager
 webui: http://[HOST]:[PORT:81]

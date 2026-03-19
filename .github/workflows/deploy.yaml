@@ -155,6 +155,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
             ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:dev
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
@@ -206,4 +207,8 @@ jobs:
 
           docker buildx imagetools create \
             --tag "ghcr.io/${REPO_OWNER}/${SLUG}:${VERSION}" \
+            "${sources[@]}"
+
+          docker buildx imagetools create \
+            --tag "ghcr.io/${REPO_OWNER}/${SLUG}:dev" \
             "${sources[@]}"
