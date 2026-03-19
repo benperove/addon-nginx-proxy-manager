@@ -20,10 +20,42 @@ permissions:
   packages: write
 
 jobs:
+  update-version:
+    name: 📝 Update addon version in config
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: ⤵️ Check out code from GitHub
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'release'
+      - name: 📝 Update config.yaml version
+        if: github.event_name == 'release'
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION,,}"
+          VERSION="${VERSION#v}"
+          sed -i "s/^version: .*/version: \"${VERSION}\"/" proxy-manager/config.yaml
+          grep "version:" proxy-manager/config.yaml
+      - name: 📤 Commit and push
+        if: github.event_name == 'release'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add proxy-manager/config.yaml
+          git diff --staged --quiet || git commit -m "chore: bump addon version to ${{ github.event.release.tag_name }}"
+          git push
+      - name: No-op for non-release
+        if: github.event_name != 'release'
+        run: echo "Skipping version update (not a release)"
+
   information:
     if: |
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'success'
+    needs: [update-version]
     name: ℹ️ Gather app information
     runs-on: ubuntu-latest
     outputs:
