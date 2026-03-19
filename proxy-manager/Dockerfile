@@ -87,6 +87,11 @@ RUN \
     \
     && cp /app/docker/rootfs/etc/letsencrypt.ini /etc \
     && cp /app/docker/rootfs/etc/logrotate.d/nginx-proxy-manager /etc/logrotate.d \
+    && sed -i 's/su npm npm/su root root/g' /etc/logrotate.d/nginx-proxy-manager \
+    \
+    && pip install --upgrade pip setuptools \
+    && CERTBOT_VER=$(certbot --version 2>/dev/null | grep -Eo '[0-9](\.[0-9]+)+' | head -1) \
+    && pip install --no-cache-dir "acme==${CERTBOT_VER}" "certbot-dns-cloudflare==${CERTBOT_VER}" \
     \
     && sed -i "s#user npm;#user root;#" /etc/nginx/nginx.conf \
     && sed -i "s#root /app/frontend;#root /opt/nginx-proxy-manager/frontend;#" \
