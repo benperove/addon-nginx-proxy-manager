@@ -32,6 +32,7 @@ RUN \
         npm \
         openssl \
         py3-pip \
+        py3-setuptools \
         python3 \
         yarn \
     \
@@ -48,6 +49,12 @@ RUN \
     && sed -i 's|/var/lib/nginx/cache|/tmp/nginx/cache|g' /app/docker/rootfs/etc/nginx/nginx.conf \
     && sed -i 's|. /opt/certbot/bin/activate && pip install --no-cache-dir |pip install |g' /app/backend/lib/certbot.js \
     && sed -i 's|  && deactivate||g' /app/backend/lib/certbot.js \
+    \
+    && NPM_VER="${NGINX_PROXY_MANAGER_VERSION#v}" \
+    && sed -i "s/\"version\": \"2.0.0\"/\"version\": \"${NPM_VER}\"/" /app/backend/package.json \
+    && sed -i 's/update_available: internalRemoteVersion.compareVersions(currentVersion, latestVersion)/update_available: false/' /app/backend/internal/remote-version.js \
+    && sed -i 's|jc21.com|NPM Fork|g' /app/frontend/src/components/SiteFooter.tsx \
+    && sed -i 's|Theme by Tabler||g' /app/frontend/src/components/SiteFooter.tsx \
     \
     && cd /app/frontend \
     && yarn install --ignore-engines --network-timeout 100000 \
