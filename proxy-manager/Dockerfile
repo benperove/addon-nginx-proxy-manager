@@ -54,7 +54,9 @@ RUN \
     && sed -i "s/\"version\": \"2.0.0\"/\"version\": \"${NPM_VER}\"/" /app/backend/package.json \
     && sed -i 's/update_available: internalRemoteVersion.compareVersions(currentVersion, latestVersion)/update_available: false/' /app/backend/internal/remote-version.js \
     && sed -i 's|jc21.com|NPM Fork|g' /app/frontend/src/components/SiteFooter.tsx \
-    && sed -i 's|Theme by Tabler||g' /app/frontend/src/components/SiteFooter.tsx \
+    && sed -i 's|href="https://jc21.com"|href="https://github.com/benperove/addon-nginx-proxy-manager"|g' /app/frontend/src/components/SiteFooter.tsx \
+    && sed -i 's|Theme by{" "}||g' /app/frontend/src/components/SiteFooter.tsx \
+    && sed -i 's|<a href="https://tabler.io"[^>]*>Tabler</a>||g' /app/frontend/src/components/SiteFooter.tsx \
     \
     && cd /app/frontend \
     && yarn install --ignore-engines --network-timeout 100000 \
