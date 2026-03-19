@@ -73,6 +73,8 @@ RUN \
     && rm -f -r /etc/nginx \
     && cp -r /app/docker/rootfs/etc/nginx /etc/nginx \
     && rm -f /etc/nginx/conf.d/dev.conf \
+    && mkdir -p /etc/nginx/modules \
+    && echo 'load_module /usr/lib/nginx/modules/ngx_stream_module.so;' > /etc/nginx/modules/10_stream.conf \
     \
     && cp /app/docker/rootfs/etc/letsencrypt.ini /etc \
     && cp /app/docker/rootfs/etc/logrotate.d/nginx-proxy-manager /etc/logrotate.d \
