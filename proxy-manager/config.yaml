@@ -1,9 +1,9 @@
 ---
-name: Nginx Proxy Manager
+name: Nginx Proxy Manager (Fork)
 version: dev
-slug: nginxproxymanager
-description: Manage Nginx proxy hosts with a simple, powerful interface
-url: https://github.com/hassio-addons/addon-nginx-proxy-manager
+slug: nginxproxymanager-fork
+description: Manage Nginx proxy hosts with a simple, powerful interface (custom fork)
+url: https://github.com/benperove/addon-nginx-proxy-manager
 webui: http://[HOST]:[PORT:81]
 startup: services
 init: false
