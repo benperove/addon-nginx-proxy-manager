@@ -8,34 +8,32 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Copy patches
-COPY patches/*.patch /usr/src/
-
 # Setup base
-ARG NGINX_PROXY_MANAGER_VERSION="v2.12.4"
+ARG NGINX_PROXY_MANAGER_VERSION="v2.14.0"
 # hadolint ignore=DL3003,DL3042
 RUN \
-    apk add --no-cache --virtual .build-dependencies \
+    apk update \
+    && apk add --no-cache --upgrade libcrypto3 libssl3 \
+    && apk add --no-cache --virtual .build-dependencies \
         build-base=0.5-r3 \
         git=2.49.1-r0 \
         libffi-dev=3.4.8-r0 \
-        openssl-dev=3.5.4-r0 \
-        patch=2.8-r0 \
+        openssl-dev \
         python3-dev=3.12.12-r0 \
     \
     && apk add --no-cache \
-        apache2-utils=2.4.65-r0 \
-        certbot=4.0.0-r0 \
-        libcap=2.76-r0 \
-        logrotate=3.21.0-r1 \
-        nginx-mod-stream=1.28.0-r3 \
-        nginx=1.28.0-r3 \
-        nodejs=22.16.0-r2 \
-        npm=11.3.0-r1 \
-        openssl=3.5.4-r0 \
-        py3-pip=25.1.1-r0 \
-        python3=3.12.12-r0 \
-        yarn=1.22.22-r1 \
+        apache2-utils \
+        certbot \
+        libcap \
+        logrotate \
+        nginx-mod-stream \
+        nginx \
+        nodejs \
+        npm \
+        openssl \
+        py3-pip \
+        python3 \
+        yarn \
     \
     && yarn global add modclean \
     \
@@ -46,12 +44,15 @@ RUN \
         /tmp/nginxproxymanager.tar.gz \
         --strip 1 -C /app \
     \
-    && for i in /usr/src/*.patch; do \
-        patch -d /app -p 1 < "${i}"; done \
+    && find /app -type f \( -name "*.js" -o -name "*.json" -o -name "*.conf" \) -exec sed -i 's|/data/|/config/|g' {} \; \
+    && sed -i 's|/var/lib/nginx/cache|/tmp/nginx/cache|g' /app/docker/rootfs/etc/nginx/nginx.conf \
+    && sed -i 's|. /opt/certbot/bin/activate && pip install --no-cache-dir |pip install |g' /app/backend/lib/certbot.js \
+    && sed -i 's|  && deactivate||g' /app/backend/lib/certbot.js \
     \
     && cd /app/frontend \
     && yarn install --ignore-engines --network-timeout 100000 \
-    && yarn build --ignore-engines \
+    && yarn locale-compile \
+    && yarn build \
     && rm -rf node_modules \
     \
     && mkdir -p /opt/nginx-proxy-manager/frontend \
@@ -62,7 +63,7 @@ RUN \
     && rm -rf node_modules \
     && cp -r /app/backend/. /opt/nginx-proxy-manager/ \
     \
-    && cp -R /app/global/. /opt/nginx-proxy-manager/global/ \
+    && ( [ -d /app/global ] && cp -R /app/global/. /opt/nginx-proxy-manager/global/ || true ) \
     \
     && cd /opt/nginx-proxy-manager \
     && yarn install \
