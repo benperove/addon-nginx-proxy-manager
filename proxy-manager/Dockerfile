@@ -47,8 +47,8 @@ RUN \
     \
     && find /app -type f \( -name "*.js" -o -name "*.json" -o -name "*.conf" \) -exec sed -i 's|/data/|/config/|g' {} \; \
     && sed -i 's|/var/lib/nginx/cache|/tmp/nginx/cache|g' /app/docker/rootfs/etc/nginx/nginx.conf \
-    && sed -i 's|. /opt/certbot/bin/activate && pip install --no-cache-dir |pip install |g' /app/backend/lib/certbot.js \
-    && sed -i 's|  && deactivate||g' /app/backend/lib/certbot.js \
+    && sed -i 's|. /opt/certbot/bin/activate && pip install --no-cache-dir |pip install --no-cache-dir |g' /app/backend/lib/certbot.js \
+    && sed -i 's| && deactivate||g' /app/backend/lib/certbot.js \
     && node -e "const fs=require('fs');const p='/app/backend/lib/certbot.js';let s=fs.readFileSync(p,'utf8');const from=['\tplugin.version = plugin.version.replace(/{{certbot-version}}/g, process.env.CERTBOT_VERSION);','\tplugin.dependencies = plugin.dependencies.replace(/{{certbot-version}}/g, process.env.CERTBOT_VERSION);'].join('\\n');const to=['\tconst certbotVersion = process.env.CERTBOT_VERSION || \\\"\\\$(certbot --version 2>/dev/null | grep -Eo \\'[0-9](\\\\\\\\.[0-9]+)+\\' | head -1)\\\";','\tplugin.version = plugin.version.replace(/{{certbot-version}}/g, certbotVersion);','\tplugin.dependencies = plugin.dependencies.replace(/{{certbot-version}}/g, certbotVersion);'].join('\\n');if(!s.includes(from)) throw new Error('certbot.js patch source not found');fs.writeFileSync(p,s.replace(from,to));" \
     \
     && NPM_VER="${NGINX_PROXY_MANAGER_VERSION#v}" \
