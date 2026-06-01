@@ -49,6 +49,7 @@ RUN \
     && sed -i 's|/var/lib/nginx/cache|/tmp/nginx/cache|g' /app/docker/rootfs/etc/nginx/nginx.conf \
     && sed -i 's|. /opt/certbot/bin/activate && pip install --no-cache-dir |pip install |g' /app/backend/lib/certbot.js \
     && sed -i 's|  && deactivate||g' /app/backend/lib/certbot.js \
+    && node -e "const fs=require('fs');const p='/app/backend/lib/certbot.js';let s=fs.readFileSync(p,'utf8');const from=['\tplugin.version = plugin.version.replace(/{{certbot-version}}/g, process.env.CERTBOT_VERSION);','\tplugin.dependencies = plugin.dependencies.replace(/{{certbot-version}}/g, process.env.CERTBOT_VERSION);'].join('\\n');const to=['\tconst certbotVersion = process.env.CERTBOT_VERSION || \\\"\\\$(certbot --version 2>/dev/null | grep -Eo \\'[0-9](\\\\\\\\.[0-9]+)+\\' | head -1)\\\";','\tplugin.version = plugin.version.replace(/{{certbot-version}}/g, certbotVersion);','\tplugin.dependencies = plugin.dependencies.replace(/{{certbot-version}}/g, certbotVersion);'].join('\\n');if(!s.includes(from)) throw new Error('certbot.js patch source not found');fs.writeFileSync(p,s.replace(from,to));" \
     \
     && NPM_VER="${NGINX_PROXY_MANAGER_VERSION#v}" \
     && sed -i "s/\"version\": \"2.0.0\"/\"version\": \"${NPM_VER}\"/" /app/backend/package.json \
@@ -91,7 +92,12 @@ RUN \
     \
     && pip install --upgrade pip setuptools \
     && CERTBOT_VER=$(certbot --version 2>/dev/null | grep -Eo '[0-9](\.[0-9]+)+' | head -1) \
-    && pip install --no-cache-dir "acme==${CERTBOT_VER}" "certbot-dns-cloudflare==${CERTBOT_VER}" \
+    && if [[ -n "${CERTBOT_VER}" ]]; then \
+        echo "${CERTBOT_VER}" > /etc/certbot-version \
+        && pip install --no-cache-dir "acme==${CERTBOT_VER}" "certbot-dns-cloudflare==${CERTBOT_VER}"; \
+    else \
+        pip install --no-cache-dir acme certbot-dns-cloudflare; \
+    fi \
     \
     && sed -i "s#user npm;#user root;#" /etc/nginx/nginx.conf \
     && sed -i "s#root /app/frontend;#root /opt/nginx-proxy-manager/frontend;#" \

@@ -8,6 +8,14 @@ declare -a options
 
 bashio::log.info "Starting the Manager..."
 
+if [[ -z "${CERTBOT_VERSION:-}" && -f /etc/certbot-version ]]; then
+    read -r CERTBOT_VERSION < /etc/certbot-version
+fi
+if [[ -z "${CERTBOT_VERSION:-}" ]]; then
+    CERTBOT_VERSION=$(certbot --version 2>/dev/null | grep -Eo '[0-9](\.[0-9]+)+' | head -1)
+fi
+export CERTBOT_VERSION
+
 options+=(--abort_on_uncaught_exception)
 options+=("--max_old_space_size=250")
 
