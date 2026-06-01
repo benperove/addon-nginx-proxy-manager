@@ -10,6 +10,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base
 ARG NGINX_PROXY_MANAGER_VERSION="v2.15.0"
+COPY patches /tmp/npm-patches
 # hadolint ignore=DL3003,DL3013,DL3018,DL3042
 RUN \
     apk update \
@@ -50,6 +51,8 @@ RUN \
     && sed -i 's|. /opt/certbot/bin/activate && pip install --no-cache-dir |pip install --no-cache-dir |g' /app/backend/lib/certbot.js \
     && sed -i 's| && deactivate||g' /app/backend/lib/certbot.js \
     && node -e "const fs=require('fs');const p='/app/backend/lib/certbot.js';let s=fs.readFileSync(p,'utf8');const from=['\tplugin.version = plugin.version.replace(/{{certbot-version}}/g, process.env.CERTBOT_VERSION);','\tplugin.dependencies = plugin.dependencies.replace(/{{certbot-version}}/g, process.env.CERTBOT_VERSION);'].join('\\n');const to=['\tconst certbotVersion = process.env.CERTBOT_VERSION || \\\"\\\$(certbot --version 2>/dev/null | grep -Eo \\'[0-9](\\\\\\\\.[0-9]+)+\\' | head -1)\\\";','\tplugin.version = plugin.version.replace(/{{certbot-version}}/g, certbotVersion);','\tplugin.dependencies = plugin.dependencies.replace(/{{certbot-version}}/g, certbotVersion);'].join('\\n');if(!s.includes(from)) throw new Error('certbot.js patch source not found');fs.writeFileSync(p,s.replace(from,to));" \
+    && cp /tmp/npm-patches/normalize-dns-credentials.js /app/backend/lib/normalize-dns-credentials.js \
+    && node /tmp/npm-patches/apply-backend-patches.js /app/backend \
     \
     && NPM_VER="${NGINX_PROXY_MANAGER_VERSION#v}" \
     && sed -i "s/\"version\": \"2.0.0\"/\"version\": \"${NPM_VER}\"/" /app/backend/package.json \

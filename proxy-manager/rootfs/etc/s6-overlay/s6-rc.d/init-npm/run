@@ -9,6 +9,7 @@ mkdir -p \
     /config/custom_ssl \
     /config/letsencrypt \
     /config/letsencrypt-acme-challenge \
+    /config/letsencrypt/credentials \
     /config/logs \
     /config/nginx/dead_host \
     /config/nginx/default_host \
@@ -30,6 +31,14 @@ ln -s /tmp/nginx /var/lib/nginx/tmp
 ln -s /config /opt/nginx-proxy-manager/config
 
 ln -sf /config/letsencrypt /etc/letsencrypt
+
+# Normalize any existing DNS credential files (strip CR bytes from older writes).
+if bashio::fs.directory_exists "/config/letsencrypt/credentials"; then
+    find /config/letsencrypt/credentials -maxdepth 1 -type f -name 'credentials-*' -print0 \
+        | while IFS= read -r -d '' cred_file; do
+            sed -i 's/\r$//' "${cred_file}"
+        done
+fi
 
 # NGinx needs this file to be able to start.
 # It will not continously log into it.
