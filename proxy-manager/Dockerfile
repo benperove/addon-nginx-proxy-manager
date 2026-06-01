@@ -13,13 +13,13 @@ ARG NGINX_PROXY_MANAGER_VERSION="v2.15.0"
 # hadolint ignore=DL3003,DL3013,DL3018,DL3042
 RUN \
     apk update \
-    && apk add --no-cache --upgrade libcrypto3 libssl3 \
+    && apk add --no-cache --upgrade libcrypto3 libssl3 musl \
     && apk add --no-cache --virtual .build-dependencies \
         build-base=0.5-r3 \
         git=2.49.1-r0 \
         libffi-dev=3.4.8-r0 \
         openssl-dev \
-        python3-dev=3.12.12-r0 \
+        python3-dev=3.12.13-r0 \
     \
     && apk add --no-cache \
         apache2-utils \
