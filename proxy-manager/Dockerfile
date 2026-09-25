@@ -105,6 +105,9 @@ RUN \
     && sed -i "s#user npm;#user root;#" /etc/nginx/nginx.conf \
     && sed -i "s#root /app/frontend;#root /opt/nginx-proxy-manager/frontend;#" \
         /etc/nginx/conf.d/production.conf.template \
+    && sed -E 's/\{\{NPM_ADMIN_PORT\}\}/81/g' \
+        /etc/nginx/conf.d/production.conf.template \
+        > /etc/nginx/conf.d/production.conf \
     && sed -i "s#table.string('id').notNull().primary();#table.string('id', 32).notNull().primary();#" \
         /opt/nginx-proxy-manager/migrations/20190227065017_settings.js \
     \
