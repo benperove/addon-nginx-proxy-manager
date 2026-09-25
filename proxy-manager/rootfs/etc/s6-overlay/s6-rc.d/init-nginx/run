@@ -5,7 +5,16 @@
 # Configures NGINX for use with the NGINX Proxy Manager
 # ==============================================================================
 declare dns_host
+declare admin_port
+declare prodfile="/etc/nginx/conf.d/production.conf"
+declare prodtemplate="/etc/nginx/conf.d/production.conf.template"
 
 dns_host=$(bashio::dns.host)
 sed -i "s/%%dns_host%%/${dns_host}/g" \
     /etc/nginx/conf.d/include/resolvers.conf
+
+admin_port="$(bashio::addon.port 81)"
+if bashio::fs.file_exists "${prodtemplate}"; then
+    sed -E "s/\\{\\{NPM_ADMIN_PORT\\}\\}/${admin_port}/g" \
+        "${prodtemplate}" > "${prodfile}"
+fi

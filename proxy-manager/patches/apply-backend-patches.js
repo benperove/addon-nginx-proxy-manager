@@ -30,19 +30,19 @@ const setupTo = `\t\t\t\t// Make sure credentials file exists and stays in sync 
 \t\t\t\t\tfs.writeFileSync(credentials_loc, credentialsContent, { mode: 0o600 });
 \t\t\t\t}`;
 
-if (!setup.includes(setupFrom)) {
-	throw new Error("setup.js credentials patch source not found");
-}
+if (setup.includes(setupFrom)) {
+	if (!setup.includes('import normalizeDnsProviderCredentials from "./lib/normalize-dns-credentials.js";')) {
+		setup = setup.replace(
+			'import utils from "./lib/utils.js";\n',
+			'import fs from "node:fs";\nimport normalizeDnsProviderCredentials from "./lib/normalize-dns-credentials.js";\nimport utils from "./lib/utils.js";\n',
+		);
+	}
 
-if (!setup.includes('import normalizeDnsProviderCredentials from "./lib/normalize-dns-credentials.js";')) {
-	setup = setup.replace(
-		'import utils from "./lib/utils.js";\n',
-		'import fs from "node:fs";\nimport normalizeDnsProviderCredentials from "./lib/normalize-dns-credentials.js";\nimport utils from "./lib/utils.js";\n',
-	);
+	setup = setup.replace(setupFrom, setupTo);
+	fs.writeFileSync(setupPath, setup);
+} else {
+	console.log("Skipping setup.js credentials patch (not present in this NPM version)");
 }
-
-setup = setup.replace(setupFrom, setupTo);
-fs.writeFileSync(setupPath, setup);
 
 let certificate = fs.readFileSync(certificatePath, "utf8");
 
@@ -53,9 +53,9 @@ if (!certificate.includes('import normalizeDnsProviderCredentials from "../lib/n
 	);
 }
 
-const writeFrom =
+const writeFromCertificate =
 	'\t\tfs.writeFileSync(credentialsLocation, certificate.meta.dns_provider_credentials, { mode: 0o600 });';
-const writeTo = `\t\tfs.writeFileSync(
+const writeToCertificate = `\t\tfs.writeFileSync(
 \t\t\tcredentialsLocation,
 \t\t\tnormalizeDnsProviderCredentials(
 \t\t\t\tcertificate.meta.dns_provider,
@@ -64,11 +64,24 @@ const writeTo = `\t\tfs.writeFileSync(
 \t\t\t{ mode: 0o600 },
 \t\t);`;
 
-if (!certificate.includes(writeFrom)) {
-	throw new Error("certificate.js credentials write patch source not found");
+const writeFromRenew = "\t\t\tfs.writeFileSync(credentialsLocation, credentials, { mode: 0o600 });";
+const writeToRenew = `\t\t\tfs.writeFileSync(
+\t\t\t\tcredentialsLocation,
+\t\t\t\tnormalizeDnsProviderCredentials(certificate.meta.dns_provider, credentials),
+\t\t\t\t{ mode: 0o600 },
+\t\t\t);`;
+
+if (!certificate.includes(writeFromCertificate)) {
+	throw new Error("certificate.js issuance credentials write patch source not found");
 }
 
-certificate = certificate.replace(writeFrom, writeTo);
+certificate = certificate.replace(writeFromCertificate, writeToCertificate);
+
+if (certificate.includes(writeFromRenew)) {
+	certificate = certificate.replace(writeFromRenew, writeToRenew);
+} else {
+	console.log("Skipping certificate.js renew credentials patch (not present in this NPM version)");
+}
 
 const renewMarker =
 	'\t\tlogger.info(\n\t\t\t`Renewing LetsEncrypt certificates via ${dnsPlugin.name} for Cert #${certificate.id}: ${certificate.domain_names.join(", ")}`,\n\t\t);\n\n\t\tconst args = [';
@@ -92,13 +105,10 @@ const renewInsert = `\t\tlogger.info(
 
 \t\tconst args = [`;
 
-if (!certificate.includes(renewMarker)) {
-	throw new Error("certificate.js DNS renew patch source not found");
-}
+if (certificate.includes(renewMarker)) {
+	certificate = certificate.replace(renewMarker, renewInsert);
 
-certificate = certificate.replace(renewMarker, renewInsert);
-
-const renewArgsMarker = `\t\tif (certificate.meta?.key_type) {
+	const renewArgsMarker = `\t\tif (certificate.meta?.key_type) {
 \t\t\targs.push("--key-type", certificate.meta.key_type);
 \t\t}
 
@@ -115,7 +125,7 @@ const renewArgsMarker = `\t\tif (certificate.meta?.key_type) {
 \t/**
 \t * @param   {Object}  certificate    the certificate row`;
 
-const renewArgsInsert = `\t\tif (certificate.meta?.key_type) {
+	const renewArgsInsert = `\t\tif (certificate.meta?.key_type) {
 \t\t\targs.push("--key-type", certificate.meta.key_type);
 \t\t}
 
@@ -142,11 +152,15 @@ const renewArgsInsert = `\t\tif (certificate.meta?.key_type) {
 \t/**
 \t * @param   {Object}  certificate    the certificate row`;
 
-if (!certificate.includes(renewArgsMarker)) {
-	throw new Error("certificate.js DNS renew args patch source not found");
+	if (!certificate.includes(renewArgsMarker)) {
+		throw new Error("certificate.js DNS renew args patch source not found");
+	}
+
+	certificate = certificate.replace(renewArgsMarker, renewArgsInsert);
+} else {
+	console.log("Skipping certificate.js DNS renew flow patch (not present in this NPM version)");
 }
 
-certificate = certificate.replace(renewArgsMarker, renewArgsInsert);
 fs.writeFileSync(certificatePath, certificate);
 
 console.log("Applied backend credential patches");

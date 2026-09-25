@@ -9,7 +9,7 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base
-ARG NGINX_PROXY_MANAGER_VERSION="v2.15.1"
+ARG NGINX_PROXY_MANAGER_VERSION="v2.16.0"
 COPY patches /tmp/npm-patches
 # hadolint ignore=DL3003,DL3013,DL3018,DL3042
 RUN \
@@ -20,7 +20,7 @@ RUN \
         git=2.49.1-r0 \
         libffi-dev=3.4.8-r0 \
         openssl-dev \
-        python3-dev=3.12.13-r0 \
+        python3-dev \
     \
     && apk add --no-cache \
         apache2-utils \
@@ -104,7 +104,7 @@ RUN \
     \
     && sed -i "s#user npm;#user root;#" /etc/nginx/nginx.conf \
     && sed -i "s#root /app/frontend;#root /opt/nginx-proxy-manager/frontend;#" \
-        /etc/nginx/conf.d/production.conf \
+        /etc/nginx/conf.d/production.conf.template \
     && sed -i "s#table.string('id').notNull().primary();#table.string('id', 32).notNull().primary();#" \
         /opt/nginx-proxy-manager/migrations/20190227065017_settings.js \
     \
