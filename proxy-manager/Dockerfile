@@ -9,7 +9,7 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base
-ARG NGINX_PROXY_MANAGER_VERSION="v2.16.0"
+ARG NGINX_PROXY_MANAGER_VERSION="v2.17.0"
 COPY patches /tmp/npm-patches
 # hadolint ignore=DL3003,DL3013,DL3018,DL3042
 RUN \
@@ -108,7 +108,7 @@ RUN \
     && sed -E 's/\{\{NPM_ADMIN_PORT\}\}/81/g' \
         /etc/nginx/conf.d/production.conf.template \
         > /etc/nginx/conf.d/production.conf \
-    && sed -i "s#table.string('id').notNull().primary();#table.string('id', 32).notNull().primary();#" \
+    && sed -i 's#table.string("id").notNull().primary();#table.string("id", 32).notNull().primary();#' \
         /opt/nginx-proxy-manager/migrations/20190227065017_settings.js \
     \
     && mkdir -p \
