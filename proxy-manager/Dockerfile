@@ -9,7 +9,7 @@ ENV NODE_OPTIONS="--openssl-legacy-provider"
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base
-ARG NGINX_PROXY_MANAGER_VERSION="v2.17.0"
+ARG NGINX_PROXY_MANAGER_VERSION="v2.17.1"
 COPY patches /tmp/npm-patches
 # hadolint ignore=DL3003,DL3013,DL3018,DL3042
 RUN \
